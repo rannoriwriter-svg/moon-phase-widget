@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moon Phase Notion Dashboard</title>
+<style>
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  body {
+    padding: 10px;
+  }
+
+  .dashboard {
+    position: relative;
+    width: 100%;
+    max-width: 760px;
+    min-height: 250px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at 82% 18%, rgba(160,150,255,.18), transparent 25%),
+      radial-gradient(circle at 15% 90%, rgba(108,92,180,.13), transparent 28%),
+      linear-gradient(135deg, #171525 0%, #0e0d18 100%);
+    color: #f3f0ff;
+    box-shadow: 0 16px 45px rgba(0,0,0,.18);
+  }
+
+  .stars, .stars::before, .stars::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    pointer-events: none;
+    background-image:
+      radial-gradient(circle, rgba(255,255,255,.65) 0 1px, transparent 1.5px),
+      radial-gradient(circle, rgba(255,255,255,.35) 0 1px, transparent 1.5px);
+    background-size: 83px 83px, 127px 127px;
+    background-position: 8px 15px, 40px 53px;
+    opacity: .22;
+  }
+
+  .stars::before {
+    transform: translate(30px, 12px);
+    opacity: .14;
+  }
+
+  .content {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 190px 1fr;
+    gap: 26px;
+    align-items: center;
+    padding: 28px 32px;
+  }
+
+  .moon-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .moon {
+    width: 132px;
+    height: 132px;
+    border-radius: 50%;
+    position: relative;
+    overflow: hidden;
+    background: #efeaff;
+    box-shadow:
+      0 0 24px rgba(230,224,255,.32),
+      0 0 65px rgba(150,135,255,.12);
+  }
+
+  .moon::before,
+  .moon::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(100,88,120,.13);
+  }
+
+  .moon::before {
+    width: 24px; height: 24px; left: 26px; top: 31px;
+    box-shadow:
+      48px 22px 0 8px rgba(100,88,120,.09),
+      28px 66px 0 4px rgba(100,88,120,.10),
+      70px 73px 0 10px rgba(100,88,120,.07);
+  }
+
+  .moon::after {
+    width: 15px; height: 15px; left: 79px; top: 27px;
+    box-shadow:
+      -47px 45px 0 3px rgba(100,88,120,.08),
+      10px 62px 0 5px rgba(100,88,120,.08);
+  }
+
+  /* The dark portion is generated from JS according to phase. */
+  .shadow {
+    position: absolute;
+    top: -1%;
+    bottom: -1%;
+    width: 102%;
+    border-radius: 50%;
+    background: #15131f;
+    transform-origin: center;
+  }
+
+  .heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 12px;
+  }
+
+  .eyebrow {
+    margin: 0 0 7px;
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #aaa1c8;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 28px;
+    line-height: 1.1;
+    font-weight: 650;
+    letter-spacing: -.03em;
+  }
+
+  .date {
+    margin-top: 8px;
+    color: #a9a3b8;
+    font-size: 13px;
+  }
+
+  .phase {
+    margin: 20px 0 0;
+    font-size: 21px;
+    font-weight: 600;
+  }
+
+  .stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-top: 13px;
+  }
+
+  .pill {
+    padding: 7px 11px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.065);
+    border: 1px solid rgba(255,255,255,.08);
+    color: #c9c3d8;
+    font-size: 12px;
+  }
+
+  .link {
+    display: inline-block;
+    margin-top: 18px;
+    color: #d9d2ff;
+    text-decoration: none;
+    font-size: 12px;
+    border-bottom: 1px solid rgba(217,210,255,.35);
+    padding-bottom: 2px;
+  }
+
+  @media (max-width: 560px) {
+    .content {
+      grid-template-columns: 1fr;
+      text-align: center;
+      padding: 25px 20px;
+    }
+
+    .heading {
+      justify-content: center;
+    }
+
+    .stats {
+      justify-content: center;
+    }
+
+    .moon {
+      width: 112px;
+      height: 112px;
+    }
+  }
+</style>
+</head>
+
+<body>
+<div class="dashboard">
+  <div class="stars"></div>
+
+  <div class="content">
+    <div class="moon-wrap">
+      <div class="moon" aria-label="Moon phase illustration">
+        <div class="shadow" id="shadow"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="heading">
+        <div>
+          <p class="eyebrow">Lunar Dashboard</p>
+          <h1>Moon Phase</h1>
+          <div class="date" id="date">Loading…</div>
+        </div>
+      </div>
+
+      <div class="phase" id="phase">Loading…</div>
+
+      <div class="stats">
+        <div class="pill" id="illumination">Illumination —</div>
+        <div class="pill" id="age">Moon age —</div>
+      </div>
+
+      <a class="link" href="https://moonphase.guide/" target="_blank" rel="noopener noreferrer">
+        View detailed moon phase ↗
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  /*
+    Approximate lunar calculation.
+    Reference: known new moon 2000-01-06 18:14 UTC.
+    Good enough for a visual Notion dashboard; not intended for astronomy.
+  */
+  const SYNODIC_MONTH = 29.530588853;
+  const REF = Date.UTC(2000, 0, 6, 18, 14, 0);
+
+  function lunarData(date) {
+    const days = (date.getTime() - REF) / 86400000;
+    let age = days % SYNODIC_MONTH;
+    if (age < 0) age += SYNODIC_MONTH;
+
+    const phase = age / SYNODIC_MONTH;
+    const illumination = (1 - Math.cos(2 * Math.PI * phase)) / 2;
+
+    let name;
+    if (age < 1.84566) name = "New Moon";
+    else if (age < 5.53699) name = "Waxing Crescent";
+    else if (age < 9.22831) name = "First Quarter";
+    else if (age < 12.91963) name = "Waxing Gibbous";
+    else if (age < 16.61096) name = "Full Moon";
+    else if (age < 20.30228) name = "Waning Gibbous";
+    else if (age < 23.99361) name = "Last Quarter";
+    else if (age < 27.68493) name = "Waning Crescent";
+    else name = "New Moon";
+
+    return { age, phase, illumination, name };
+  }
+
+  function drawMoon(data) {
+    const shadow = document.getElementById("shadow");
+    const p = data.phase;
+
+    if (p < 0.5) {
+      // Waxing: dark crescent/half moves from right toward left.
+      const x = -100 + (p / 0.5) * 200;
+      shadow.style.left = x + "%";
+      shadow.style.right = "auto";
+      shadow.style.borderRadius = "50%";
+      shadow.style.boxShadow = "none";
+    } else {
+      // Waning: dark portion moves from left toward right.
+      const x = ((p - 0.5) / 0.5) * 200;
+      shadow.style.left = "auto";
+      shadow.style.right = x + "%";
+      shadow.style.borderRadius = "50%";
+      shadow.style.boxShadow = "none";
+    }
+
+    // At exact new moon make the moon completely dark.
+    if (data.illumination < 0.015) {
+      shadow.style.left = "0";
+      shadow.style.right = "0";
+    }
+
+    // At exact full moon hide the shadow.
+    if (data.illumination > 0.985) {
+      shadow.style.left = "105%";
+      shadow.style.right = "auto";
+    }
+  }
+
+  const now = new Date();
+  const data = lunarData(now);
+
+  document.getElementById("date").textContent =
+    now.toLocaleDateString("en-GB", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+
+  document.getElementById("phase").textContent = data.name;
+
+  document.getElementById("illumination").textContent =
+    "Illumination " + Math.round(data.illumination * 100) + "%";
+
+  document.getElementById("age").textContent =
+    "Moon age " + data.age.toFixed(1) + " days";
+
+  drawMoon(data);
+</script>
+</body>
+</html>
